@@ -90,17 +90,30 @@
         }
 
         // Submit data
-        document.getElementById("submit").onclick = function() {
-            var origin = document.getElementById("origin").value;
-            var destination = document.getElementById("destination").value;
-            var routeGeoJSON = drawnItems.toGeoJSON();
+document.getElementById("submit").onclick = function() {
+    var origin = document.getElementById("origin").value;
+    var destination = document.getElementById("destination").value;
+    var routeGeoJSON = drawnItems.toGeoJSON();
 
-            console.log("Origin:", origin);
-            console.log("Destination:", destination);
-            console.log("Route Data:", JSON.stringify(routeGeoJSON));
-
-            alert("Data logged to console. Connect this to your database.");
-        };
+    fetch("https://script.google.com/macros/s/AKfycbwETNDwH6a63jARqjIbSLoVAaw7GMfxOgwuy41mrym758wispASWToaK-GaG7SjaCKv/exec", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            origin: origin,
+            destination: destination,
+            route: routeGeoJSON
+        })
+    })
+    .then(response => response.text())
+    .then(data => {
+        alert("Data submitted successfully!");
+        console.log("Response:", data);
+    })
+    .catch(error => {
+        alert("Error submitting data.");
+        console.error("Error:", error);
+    });
+};
     </script>
 </body>
 </html>
