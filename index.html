@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Travel Survey Map</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css"/>
+    <style>
+        #map { height: 500px; width: 100%; }
+    </style>
+</head>
+<body>
+    <h3>Interactive Travel Survey</h3>
+    <label>Origin:</label> <input type="text" id="origin" placeholder="Enter origin"><br/>
+    <label>Destination:</label> <input type="text" id="destination" placeholder="Enter destination"><br/>
+    <div id="map"></div>
+    <button id="submit">Submit</button>
+
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
+    <script>
+        var map = L.map('map').setView([51.505, -0.09], 13);
+
+        // Add OpenStreetMap tile layer
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+        }).addTo(map);
+
+        // Initialize the drawing tool
+        var drawnItems = new L.FeatureGroup();
+        map.addLayer(drawnItems);
+        var drawControl = new L.Control.Draw({
+            edit: { featureGroup: drawnItems },
+            draw: { polygon: false, rectangle: false, circle: false, marker: false }
+        });
+        map.addControl(drawControl);
+
+        // Capture drawn routes
+        map.on('draw:created', function (e) {
+            var layer = e.layer;
+            drawnItems.addLayer(layer);
+        });
+
+        document.getElementById("submit").onclick = function() {
+            var origin = document.getElementById("origin").value;
+            var destination = document.getElementById("destination").value;
+
+            // Convert drawn routes to GeoJSON
+            var routeGeoJSON = drawnItems.toGeoJSON();
+            console.log("Origin:", origin);
+            console.log("Destination:", destination);
+            console.log("Route Data:", JSON.stringify(routeGeoJSON));
+
+            alert("Data logged to console. Connect this to your database.");
+        };
+    </script>
+</body>
+</html>
