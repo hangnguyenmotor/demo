@@ -14,20 +14,26 @@
     <h3>Interactive Travel Survey</h3>
     <label>Origin:</label> <input type="text" id="origin" placeholder="Enter origin"><br/>
     <label>Destination:</label> <input type="text" id="destination" placeholder="Enter destination"><br/>
+    <button id="setPins">Set Pins</button>
     <div id="map"></div>
     <button id="submit">Submit</button>
 
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
     <script>
-        var map = L.map('map').setView([51.505, -0.09], 13);
+        // Initialize the map and center it on Da Nang, Vietnam
+        var map = L.map('map', {
+            maxBounds: [[15.8, 107.9], [16.2, 108.4]], // Restrict to Da Nang area
+            maxBoundsViscosity: 1.0
+        }).setView([16.0544, 108.2022], 13);
 
         // Add OpenStreetMap tile layer
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             maxZoom: 19,
+            minZoom: 12 // Prevent zooming out too far
         }).addTo(map);
 
-        // Initialize the drawing tool
+        // Initialize drawing tools
         var drawnItems = new L.FeatureGroup();
         map.addLayer(drawnItems);
         var drawControl = new L.Control.Draw({
@@ -42,12 +48,52 @@
             drawnItems.addLayer(layer);
         });
 
-        document.getElementById("submit").onclick = function() {
+        // Markers for origin and destination
+        var originMarker, destinationMarker;
+
+        // Function to set markers on the map
+        document.getElementById("setPins").onclick = function() {
             var origin = document.getElementById("origin").value;
             var destination = document.getElementById("destination").value;
 
-            // Convert drawn routes to GeoJSON
+            if (!origin || !destination) {
+                alert("Please enter both origin and destination!");
+                return;
+            }
+
+            // Use OpenStreetMap's Nominatim API to geocode the locations
+            fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${origin}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.length > 0) {
+                        var lat = data[0].lat, lon = data[0].lon;
+                        if (originMarker) map.removeLayer(originMarker);
+                        originMarker = L.marker([lat, lon]).addTo(map).bindPopup("Origin: " + origin).openPopup();
+                        map.setView([lat, lon], 14);
+                    } else {
+                        alert("Origin location not found.");
+                    }
+                });
+
+            fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${destination}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.length > 0) {
+                        var lat = data[0].lat, lon = data[0].lon;
+                        if (destinationMarker) map.removeLayer(destinationMarker);
+                        destinationMarker = L.marker([lat, lon]).addTo(map).bindPopup("Destination: " + destination).openPopup();
+                    } else {
+                        alert("Destination location not found.");
+                    }
+                });
+        };
+
+        // Submit data
+        document.getElementById("submit").onclick = function() {
+            var origin = document.getElementById("origin").value;
+            var destination = document.getElementById("destination").value;
             var routeGeoJSON = drawnItems.toGeoJSON();
+
             console.log("Origin:", origin);
             console.log("Destination:", destination);
             console.log("Route Data:", JSON.stringify(routeGeoJSON));
