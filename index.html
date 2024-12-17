@@ -61,32 +61,33 @@
                 return;
             }
 
-            // Use OpenStreetMap's Nominatim API to geocode the locations
-            fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${origin}`)
+            // Geocode origin and destination
+            geocodeLocation(origin, "Origin");
+            geocodeLocation(destination, "Destination");
+        };
+
+        function geocodeLocation(location, type) {
+            fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${location}`)
                 .then(res => res.json())
                 .then(data => {
                     if (data.length > 0) {
                         var lat = data[0].lat, lon = data[0].lon;
-                        if (originMarker) map.removeLayer(originMarker);
-                        originMarker = L.marker([lat, lon]).addTo(map).bindPopup("Origin: " + origin).openPopup();
+
+                        if (type === "Origin") {
+                            if (originMarker) map.removeLayer(originMarker);
+                            originMarker = L.marker([lat, lon]).addTo(map).bindPopup("Origin: " + location).openPopup();
+                        } else if (type === "Destination") {
+                            if (destinationMarker) map.removeLayer(destinationMarker);
+                            destinationMarker = L.marker([lat, lon]).addTo(map).bindPopup("Destination: " + location).openPopup();
+                        }
+
+                        // Focus map to the first result
                         map.setView([lat, lon], 14);
                     } else {
-                        alert("Origin location not found.");
+                        alert(type + " location not found.");
                     }
                 });
-
-            fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${destination}`)
-                .then(res => res.json())
-                .then(data => {
-                    if (data.length > 0) {
-                        var lat = data[0].lat, lon = data[0].lon;
-                        if (destinationMarker) map.removeLayer(destinationMarker);
-                        destinationMarker = L.marker([lat, lon]).addTo(map).bindPopup("Destination: " + destination).openPopup();
-                    } else {
-                        alert("Destination location not found.");
-                    }
-                });
-        };
+        }
 
         // Submit data
         document.getElementById("submit").onclick = function() {
@@ -103,3 +104,4 @@
     </script>
 </body>
 </html>
+
